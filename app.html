@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>L645 · v1.2</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--ink:#171a20;--muted:#5c6370;--red:#e82127;--line:#e2e5ea}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,"Noto Sans KR",sans-serif;background:radial-gradient(900px 420px at 90% -10%,#dce8ff 0%,transparent 55%),#f6f7f9;color:var(--ink)}
+.wrap{max-width:720px;margin:0 auto;padding:18px 14px 80px}
+h1{font-size:26px;letter-spacing:-.05em;margin:0}h1 span{color:var(--red)}
+.sub{color:var(--muted);font-size:13px;margin:6px 0 14px}
+.tabs{display:flex;gap:8px;margin:10px 0 14px}
+.tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-weight:700}
+.tabs button.on{background:#0b0e14;color:#fff;border-color:#0b0e14}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin:10px 0}
+.game{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+.game:last-child{border-bottom:0}
+.tag{width:36px;height:36px;border-radius:50%;background:#0b0e14;color:#fff;display:grid;place-items:center;font-weight:700;flex:none}
+.balls{display:flex;gap:6px;flex-wrap:wrap}
+.ball{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#111}
+.c1{background:#ffd54a}.c2{background:#7eb6ff}.c3{background:#ff8a80}.c4{background:#7ddea0}.c5{background:#c5c9d1}
+.note{color:var(--muted);font-size:12px;margin-top:4px}
+.copy{width:100%;background:#f2f3f5;border:0;border-radius:12px;padding:10px;font:inherit}
+button.act{background:var(--red);color:#fff;border:0;border-radius:999px;padding:10px 14px;font-weight:700}
+.tiny{color:var(--muted);font-size:12px;line-height:1.5}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:8px 4px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+.warn{background:#fff7e8;border:1px solid #f0d7a3;color:#6b4e00;border-radius:12px;padding:10px 12px;font-size:12px}
+</style></head>
+<body>
+<div class="wrap">
+<h1>L645 <span>TELEMETRY</span></h1>
+<div class="sub">v1.2 live · 제 1244회 · 토 20:45 · 5게임 5,000원</div>
+<div class="tabs">
+<button class="on" data-tab="week">5게임</button>
+<button data-tab="make">다시 뽑기</button>
+<button data-tab="last">직전 회차</button>
+</div>
+<div id="app"></div>
+</div>
+<script>
+const WEEK=[
+{tag:'A',nums:[4,9,23,29,32,42],ac:9,note:'합139 홀3:3 AC9'},
+{tag:'B',nums:[8,11,34,35,39,43],ac:9,note:'합170 홀4:2 AC9 연번34-35'},
+{tag:'C',nums:[2,19,26,27,37,40],ac:10,note:'합151 홀3:3 AC10 연번26-27'},
+{tag:'D',nums:[6,10,12,33,34,41],ac:10,note:'합136 홀2:4 AC10 연번33-34'},
+{tag:'E',nums:[13,14,17,28,31,36],ac:8,note:'합139 홀3:3 AC8 연번13-14'}
+];
+const cls=n=>n<=10?'c1':n<=20?'c2':n<=30?'c3':n<=40?'c4':'c5';
+const ball=n=>'<span class="ball '+cls(n)+'">'+n+'</span>';
+const acOf=nums=>{const s=[...nums].sort((a,b)=>a-b);const d=new Set();for(let i=0;i<6;i++)for(let j=i+1;j<6;j++)d.add(s[j]-s[i]);return d.size-5};
+const feat=nums=>{const s=[...nums].sort((a,b)=>a-b);const odd=s.filter(n=>n%2).length;const cons=s.slice(1).filter((n,i)=>n===s[i]+1).length;const tail=s.reduce((a,n)=>a+n%10,0);return{sum:s.reduce((a,b)=>a+b,0),odd,ac:acOf(s),cons,tail}};
+const ok=f=>f.sum>=105&&f.sum<=170&&f.ac>=8&&f.odd>=2&&f.odd<=4&&f.cons<=1&&f.tail>=16&&f.tail<=36;
+function pick5(seed){let s=seed>>>0;const rnd=()=>(s=(s*1664525+1013904223)>>>0)/4294967296;const out=[],seen=new Set();let guard=0;while(out.length<5&&guard++<8000){const pool=[...Array(45)].map((_,i)=>i+1);for(let i=44;i>0;i--){const j=Math.floor(rnd()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}const nums=pool.slice(0,6).sort((a,b)=>a-b);const key=nums.join(',');if(seen.has(key))continue;const f=feat(nums);if(!ok(f))continue;let overlap=0;for(const g of out)overlap+=nums.filter(n=>g.nums.includes(n)).length;if(out.length&&overlap>2)continue;seen.add(key);out.push({tag:String.fromCharCode(65+out.length),nums,ac:f.ac,note:'합'+f.sum+' 홀'+f.odd+':'+(6-f.odd)+' AC'+f.ac})}return out}
+const gamesHtml=list=>list.map(g=>'<div class="game"><div class="tag">'+g.tag+'</div><div><div class="balls">'+g.nums.map(ball).join('')+'</div><div class="note">AC '+g.ac+' · '+g.note+'</div></div></div>').join('');
+const copyBox=list=>list.map(g=>g.tag+'  '+g.nums.join('  ')).join('\n');
+let tab='week';let extra=pick5(Date.now()&0xffffffff);
+function paint(){const box=document.getElementById('app');
+if(tab==='week'){box.innerHTML='<div class="card"><h3 style="margin:0 0 8px">이번 주 고정 5게임</h3>'+gamesHtml(WEEK)+'</div><div class="card"><div class="tiny">복붙</div><textarea class="copy" id="copybox" rows="5" readonly>'+copyBox(WEEK)+'</textarea><div style="margin-top:10px"><button class="act" id="copybtn">5게임 복사</button></div></div><div class="warn">저장소 app.html을 올리면 앱을 다시 켤 때 반영됩니다. github.com/skarbs8086-blip/l645-live</div>';document.getElementById('copybtn').onclick=async()=>{await navigator.clipboard.writeText(document.getElementById('copybox').value);document.getElementById('copybtn').textContent='복사됨'}}
+else if(tab==='make'){box.innerHTML='<div class="card"><h3 style="margin:0 0 8px">다시 뽑기 · 항상 5게임</h3><p class="tiny">AC 8~10. 8장이 아니라 5장만 줍니다.</p>'+gamesHtml(extra)+'<div style="margin-top:12px"><button class="act" id="reroll">5게임 다시</button></div></div><div class="card"><textarea class="copy" rows="5" readonly>'+copyBox(extra)+'</textarea></div>';document.getElementById('reroll').onclick=()=>{extra=pick5((Date.now()^Math.floor(Math.random()*1e9))>>>0);paint()}}
+else{box.innerHTML='<div class="card" id="latest"><div class="tiny">불러오는 중…</div></div>';fetch('https://smok95.github.io/lotto/results/latest.json').then(r=>r.json()).then(d=>{const nums=d.numbers||[];const p=(d.divisions||[]).map(x=>x.prize||0);const c=(d.divisions||[]).map(x=>x.winners||0);const won=n=>Number(n||0).toLocaleString('ko-KR')+'원';const after=prize=>{prize=Number(prize||0);if(prize<=2000000)return prize;const t=Math.max(0,prize-1000);const tax=t<=300000000?Math.floor(t*0.22):Math.floor(300000000*0.22)+Math.floor((t-300000000)*0.33);return prize-tax};document.getElementById('latest').innerHTML='<h3 style="margin:0 0 8px">제 '+d.draw_no+'회 · '+String(d.date||'').slice(0,10)+'</h3><div class="balls">'+nums.map(ball).join('')+' <span class="tiny">+ '+(d.bonus_no||'')+'</span></div><div class="note">AC '+acOf(nums)+'</div><table style="margin-top:10px"><tr><th>등수</th><th>인원</th><th>세전</th><th>세후</th></tr>'+[0,1,2,3,4].map(i=>'<tr><td>'+(i+1)+'등</td><td>'+(c[i]||0).toLocaleString('ko-KR')+'</td><td>'+won(p[i])+'</td><td>'+won(after(p[i]))+'</td></tr>').join('')+'</table>'}).catch(()=>{document.getElementById('latest').innerHTML='<div class="tiny">최근 회차를 못 불러왔습니다.</div>'})}}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));paint()});
+paint();
+</script></body></html>
