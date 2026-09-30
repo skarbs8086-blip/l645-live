@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>L645</title>
+</head>
+<body style="font-family:sans-serif;padding:28px;background:#f6f7f9;color:#171a20">불러오는 중…</body>
+<script>
+(async () => {
+  const urls = [
+    "https://raw.githubusercontent.com/skarbs8086-blip/l645-live/main/app.html?t=" + Date.now(),
+    "https://cdn.jsdelivr.net/gh/skarbs8086-blip/l645-live@main/app.html?t=" + Date.now()
+  ];
+  let lastErr;
+  for (const u of urls) {
+    try {
+      const res = await fetch(u, { cache: "no-store" });
+      if (!res.ok) throw new Error(u + " " + res.status);
+      const html = await res.text();
+      if (html.length < 200) throw new Error("empty");
+      document.open(); document.write(html); document.close();
+      return;
+    } catch (e) { lastErr = e; }
+  }
+  document.body.textContent = "저장소를 못 읽습니다. " + lastErr;
+})();
+</script></html>
